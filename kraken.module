@@ -119,6 +119,7 @@ function kraken_image_effect_info() {
       )
     ),
     'effect callback' => 'kraken_optimize',
+    'dimensions passthrough' => TRUE,
   );
   return $effects;
 }
