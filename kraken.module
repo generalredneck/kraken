@@ -49,6 +49,7 @@ function kraken_libraries_info() {
 function kraken_form_system_image_toolkit_settings_alter(&$form, &$form_state) {
   $kraken_api_key = '';
   $kraken_api_secret = '';
+  $timeout = 30;
   $kraken_vars = variable_get('kraken', FALSE);
   if (isset($kraken_vars['api_key'])) {
     $kraken_api_key = $kraken_vars['api_key'];
@@ -56,7 +57,10 @@ function kraken_form_system_image_toolkit_settings_alter(&$form, &$form_state) {
   if (isset($kraken_vars['api_secret'])) {
     $kraken_api_secret = $kraken_vars['api_secret'];
   }
-  
+  if (isset($kraken_vars['timeout'])) {
+    $timeout = $kraken_vars['timeout'];
+  }
+
   $form['kraken'] = array(
     '#type' => 'fieldset',
     '#title' => 'kraken.io settings',
@@ -101,6 +105,14 @@ function kraken_form_system_image_toolkit_settings_alter(&$form, &$form_state) {
         '#title' => t('API Secret'),
         '#type' => 'textfield',
         '#default_value' => $kraken_api_secret,
+      );
+
+      $form['kraken']['timeout'] = array(
+        '#title' => t('Timeout (in seconds)'),
+        '#type' => 'textfield',
+        '#required' => TRUE,
+        '#element_validate' => array('element_validate_integer_positive'),
+        '#default_value' => $timeout,
       );
     }
   }
@@ -157,8 +169,16 @@ function kraken_optimize(&$image, $data) {
     drupal_set_message(t('The kraken-php library has not loaded correctly. Please
       review the installation instructions'), 'error');
   }
-  
-  $kraken = new Kraken($kraken_settings['api_key'], $kraken_settings['api_secret']);
+
+  $proxy_params = array();
+  $proxy_server = variable_get('proxy_server', '');
+  if ($proxy_server && _drupal_http_use_proxy('api.kraken.io')) {
+    $proxy_params['proxy'] = $proxy_server;
+    $proxy_params['port'] = variable_get('proxy_port', 8080);
+    $proxy_params['type'] = 'HTTP';
+  }
+
+  $kraken = new Kraken($kraken_settings['api_key'], $kraken_settings['api_secret'], $kraken_settings['timeout'], $proxy_params);
   
   $params = array(
     'file' => drupal_realpath($image->source),
