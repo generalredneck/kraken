@@ -199,7 +199,7 @@ function kraken_optimize(&$image, $data) {
             '@file_name' => $data['file_name'],
             '@original_size' => $data['original_size'],
             '@kraked_size' => $data['kraked_size'],
-            '@saved_byes' => $data['saved_bytes'],
+            '@saved_bytes' => $data['saved_bytes'],
           )
         );
       
